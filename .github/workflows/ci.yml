@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: pipx install "poetry>=2,<3"
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Lint
+        run: |
+          poetry run ruff check .
+          poetry run ruff format --check .
+      - name: Type check
+        run: poetry run mypy
+      - name: Static security analysis
+        run: poetry run bandit -q -r src -c pyproject.toml
+      - name: Tests
+        run: poetry run pytest
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Audit locked dependencies
+        run: |
+          pipx install "poetry>=2,<3"
+          pipx inject poetry poetry-plugin-export
+          poetry export --with dev --format requirements.txt --output requirements-audit.txt
+          pipx run pip-audit --strict --requirement requirements-audit.txt

@@ -1,0 +1,76 @@
+[project]
+name = "etl-lite"
+version = "1.0.0"
+description = "A lightweight, declarative, secure-by-default ETL framework"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "ETL Lite maintainers" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pandas>=2.2,<3",
+    "numpy>=2.0",
+    "sqlalchemy>=2.0,<3",
+    "pyyaml>=6.0.1,<7",
+    "pydantic>=2.6,<3",
+    "pyarrow>=17.0",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2,<4"]
+
+[project.scripts]
+etl-lite = "etl_lite.cli:app"
+
+[tool.poetry]
+packages = [{ include = "etl_lite", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=9.0.3"
+pytest-cov = ">=5.0"
+ruff = ">=0.6"
+mypy = ">=1.11"
+pandas-stubs = ">=2.2"
+types-pyyaml = ">=6.0"
+bandit = ">=1.7.9"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# --------------------------------------------------------------------------- tooling
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --cov=etl_lite --cov-report=term-missing --cov-fail-under=85"
+filterwarnings = ["error::DeprecationWarning:etl_lite.*"]
+
+[tool.coverage.run]
+branch = true
+source = ["etl_lite"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "RUF", "PL", "N", "C4", "PT", "RET", "TID"]
+ignore = ["PLR0913", "PLR2004", "PLR0911"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004", "S608"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+packages = ["etl_lite"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]

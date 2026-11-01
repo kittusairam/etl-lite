@@ -1,0 +1,23 @@
+# Extract customers from PostgreSQL into Parquet using a parameterised, read-only query.
+#
+# Prerequisites: same as csv_to_postgres.yaml (POSTGRES_URL set, postgres extra installed).
+# Run: etl-lite run --config config/postgres_to_parquet.yaml --env dev
+name: postgres-to-parquet
+description: Export customers with an id at or above a threshold to Parquet.
+
+source:
+  type: sql
+  db_url: "${POSTGRES_URL}"
+  query: >-
+    SELECT id, full_name, email
+    FROM public.customers
+    WHERE id >= :min_id
+    ORDER BY id
+  params:
+    min_id: 1
+
+load:
+  type: parquet
+  path: data/customers_export.parquet
+  mode: replace
+  compression: zstd

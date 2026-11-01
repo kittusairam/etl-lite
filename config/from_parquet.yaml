@@ -1,0 +1,18 @@
+# Filter the Parquet output and write it back to CSV.
+# Run after to_parquet.yaml: etl-lite run --config config/from_parquet.yaml
+name: parquet-to-csv
+description: Keep the first three customers and export them as CSV.
+
+source:
+  type: parquet
+  path: data/output.parquet
+
+transformations:
+  - action: filter
+    condition: "id < 4"
+
+load:
+  type: csv
+  path: data/back_to_csv.csv
+  mode: replace
+  escape_formulas: true

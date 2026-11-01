@@ -1,0 +1,23 @@
+# Load cleaned customer data into SQLite. The database location comes from the environment,
+# with a safe default, so no connection details are hard-coded.
+# Run: etl-lite run --config config/csv_to_sqlite.yaml --env dev
+name: customers-to-sqlite
+
+source:
+  type: csv
+  path: data/source.csv
+
+transformations:
+  - action: deduplicate
+    subset: [email]
+  - action: rename
+    mapping:
+      name: full_name
+  - action: select
+    columns: [id, full_name, email]
+
+load:
+  type: sqlite
+  db_url: "${CUSTOMERS_DB_URL:-sqlite:///data/customers.db}"
+  table: customers
+  mode: replace

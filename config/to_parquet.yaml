@@ -1,0 +1,18 @@
+# Convert the sample CSV into Parquet.
+# Run: etl-lite run --config config/to_parquet.yaml
+name: csv-to-parquet
+description: Convert the source CSV into a compressed Parquet file.
+
+source:
+  type: csv
+  path: data/source.csv
+  options:
+    sep: ","
+
+transformations: []
+
+load:
+  type: parquet
+  path: data/output.parquet
+  mode: replace
+  compression: snappy

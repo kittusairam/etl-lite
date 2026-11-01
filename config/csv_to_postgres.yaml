@@ -1,0 +1,35 @@
+# Load customer data from CSV into a PostgreSQL table.
+#
+# Prerequisites:
+#   poetry install --extras postgres
+#   export POSTGRES_URL='postgresql+psycopg://postgres:<password>@localhost:5432/postgres'
+#   (URL-encode special characters in the password, e.g. '@' -> '%40')
+#
+# Run: etl-lite run --config config/csv_to_postgres.yaml --env dev
+name: customers-to-postgres
+description: Clean the source CSV and load it into public.customers.
+
+source:
+  type: csv
+  path: data/source.csv
+
+transformations:
+  - action: deduplicate
+    subset: [email]
+  - action: filter
+    condition: "email != None"
+  - action: rename
+    mapping:
+      name: full_name
+  - action: select
+    columns: [id, full_name, email]
+
+load:
+  type: sql
+  db_url: "${POSTGRES_URL}"
+  schema: public
+  table: customers
+  # replace: drop and recreate the table on each run (idempotent full refresh).
+  # Use 'append' for incremental loads or 'fail' to refuse overwriting existing data.
+  mode: replace
+  chunksize: 10000
